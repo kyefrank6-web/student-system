@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% from "macros/list_search.html" import list_search_toolbar %}
+{% from "macros/learner_avatar.html" import learner_avatar %}
+
+{% block title %}Learner roster · CampusPass{% endblock %}
+{% block page_heading %}Learner roster{% endblock %}
+
+{% block content %}
+{% if is_teacher and session.get('parent_import_logins') %}
+<div class="alert alert-success border-0 shadow-sm mb-4 d-flex flex-wrap align-items-center justify-content-between gap-2" role="alert">
+    <span>
+        <i class="fa-solid fa-file-excel me-2"></i>
+        Parent portal logins from your last import are ready to download.
+    </span>
+    <a href="{{ url_for('download_parent_import_logins') }}" class="btn btn-sm btn-success fw-semibold">
+        <i class="fa-solid fa-download me-1"></i> Download parent logins (.xlsx)
+    </a>
+</div>
+{% endif %}
+<div class="page-header d-flex flex-wrap align-items-start justify-content-between gap-3">
+    <div>
+        <h2>
+            {% if is_teacher and filter_class %}
+            Your class — {{ filter_class }}{% if teacher_stream %} {{ teacher_stream }}{% endif %}
+            {% else %}
+            Learners in your school
+            {% endif %}
+        </h2>
+        <p>Status is <span class="badge bg-success" style="font-size: 0.7rem;">PRESENT</span> when no open gate exit exists, and <span class="badge bg-danger" style="font-size: 0.7rem;">ABSENT</span> when the learner has been scanned out and not yet returned.</p>
+        {% if not is_teacher %}
+        <p class="small text-muted mb-0 mt-2"><i class="fa-solid fa-circle-info me-1"></i> Learners are registered by class teachers and appear here for your school automatically.</p>
+        {% endif %}
+    </div>
+    <div class="d-flex flex-wrap gap-2 shrink-0">
+        <a href="{{ url_for('download_roster', klass=filter_class) }}" class="btn btn-outline-primary fw-semibold">
+            <i class="fa-solid fa-download me-1"></i> Download roster
+        </a>
+        {% if is_teacher %}
+        <a href="{{ url_for('register_student') }}" class="btn btn-primary fw-semibold">
+            <i class="fa-solid fa-user-plus me-1"></i> Register learner
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if not is_teacher %}
+<div class="card-surface mb-4">
+    <div class="card-head d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span><i class="fa-solid fa-filter"></i> Filter by class</span>
+        <form method="GET" action="{{ url_for('students') }}" class="d-flex gap-2 align-items-center">
+            <select name="klass" class="form-select form-select-sm" style="min-width: 220px;" onchange="this.form.submit()">
+                <option value="">All classes</option>
+                <optgroup label="Primary">
+                    {% for code, lbl in ug_primary_levels %}
+                    <option value="{{ code }}" {% if filter_class == code %}selected{% endif %}>{{ code }} — {{ lbl }}</option>
+                    {% endfor %}
+                </optgroup>
+                <optgroup label="Secondary">
+                    {% for code, lbl in ug_secondary_levels %}
+                    <option value="{{ code }}" {% if filter_class == code %}selected{% endif %}>{{ code }} — {{ lbl }}</option>
+                    {% endfor %}
+                </optgroup>
+            </select>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="card-surface">
+    <div class="card-head d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span>
+            <i class="fa-solid fa-list"></i>
+            {% if filter_class %}
+            Class {{ filter_class }} · {{ students|length }} learner{% if students|length != 1 %}s{% endif %}
+            {% else %}
+            All classes · {{ students|length }} learner{% if students|length != 1 %}s{% endif %}
+            {% endif %}
+        </span>
+    </div>
+    <div class="card-body p-0{% if students %} list-search-panel{% endif %}"{% if students %} data-list-search-panel{% endif %}>
+        {% if students %}
+        {{ list_search_toolbar('Search by name, class, stream, RFID, parent, or ID…', 'learner-roster-search') }}
+        <div class="table-wrap">
+            <table class="table table-app table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Class</th>
+                        <th>Stream</th>
+                        <th>Status</th>
+                        <th>RFID</th>
+                        <th>Parent</th>
+                        <th class="text-muted">ID</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                    {% set st = status_map.get(s.id, 'present') %}
+                    {% set p = parent_by_id.get(s.parent_id) %}
+                    {% set pname = p.name if p else '' %}
+                    <tr data-search-text="{{ s.name }} {{ s.class_level }} {{ s.stream or '' }} {{ st }} {{ s.rfid_tag or '' }} {{ pname }} {{ s.student_code or '' }} {{ display_student_id(s) }}">
+                        <td class="fw-semibold">
+                            <div class="learner-name-cell">
+                                {{ learner_avatar(s) }}
+                                <span>{{ s.name }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ s.class_level }}</span>
+                        </td>
+                        <td>{% if s.stream %}{{ s.stream }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                        <td>
+                            {% if st == 'present' %}
+                            <span class="badge bg-success">Present</span>
+                            {% else %}
+                            <span class="badge bg-danger">Absent</span>
+                            {% endif %}
+                        </td>
+                        <td>{% if s.rfid_tag %}<code class="small">{{ s.rfid_tag }}</code>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                        <td>
+                            {% if s.parent_id and parent_by_id.get(s.parent_id) %}
+                            {{ parent_by_id[s.parent_id].name }}
+                            {% elif s.parent_id %}
+                            <span class="text-muted">#{{ s.parent_id }}</span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small"><code>{{ display_student_id(s) }}</code></td>
+                        <td class="text-end text-nowrap">
+                            <a href="{{ url_for('edit_student', student_id=s.id) }}" class="btn btn-sm btn-outline-primary btn-table">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="list-search-empty d-none" data-list-search-empty>
+            <i class="fa-solid fa-magnifying-glass"></i>
+            No learners match your search.
+        </p>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-children"></i>
+            {% if is_teacher %}
+            <p class="mb-3">No learners in your class yet.</p>
+            <a href="{{ url_for('register_student') }}" class="btn btn-primary fw-semibold px-4">
+                <i class="fa-solid fa-user-plus me-1"></i> Register learner
+            </a>
+            {% else %}
+            <p class="mb-0">No learners in this view yet. Ask the class teacher for each grade to register their learners.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

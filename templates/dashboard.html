@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · CampusPass{% endblock %}
+
+{% block content %}
+{% set pending_cnt = requests|selectattr('status', 'equalto', 'pending')|list|length %}
+{% set approved_cnt = requests|selectattr('status', 'equalto', 'approved')|list|length %}
+{% set rejected_cnt = requests|selectattr('status', 'equalto', 'rejected')|list|length %}
+
+<section class="dash-hero">
+    <div class="dash-hero-inner">
+        <div class="dash-hero-text">
+            {% if current_user.role == 'teacher' %}
+            <span class="dash-hero-chip dash-hero-chip--teacher"><i class="fa-solid fa-chalkboard-user"></i> Class teacher</span>
+            {% elif current_user.role == 'admin' %}
+            <span class="dash-hero-chip dash-hero-chip--admin"><i class="fa-solid fa-user-tie"></i> School admin</span>
+            {% elif current_user.role == 'nurse' %}
+            <span class="dash-hero-chip dash-hero-chip--nurse"><i class="fa-solid fa-heart-pulse"></i> School nurse</span>
+            {% elif current_user.role == 'guard' %}
+            <span class="dash-hero-chip dash-hero-chip--guard"><i class="fa-solid fa-shield-halved"></i> Gate security</span>
+            {% elif current_user.role == 'parent' %}
+            <span class="dash-hero-chip dash-hero-chip--parent"><i class="fa-solid fa-people-roof"></i> Parent</span>
+            {% elif current_user.role == 'superadmin' %}
+            <span class="dash-hero-chip dash-hero-chip--superadmin"><i class="fa-solid fa-crown"></i> Super admin</span>
+            {% endif %}
+            <h1>Dashboard</h1>
+            <p>
+                {% if current_user.role == 'teacher' and current_user.class_level %}
+                Welcome back, {{ current_user.name.split()[0] if current_user.name else 'there' }}.
+                Manage movement for <strong>{{ current_user.class_level }}{% if current_user.stream %} {{ current_user.stream }}{% endif %}</strong> from the shortcuts below.
+                {% elif current_user.role == 'admin' and nav_school %}
+                Welcome back. Oversee movement requests and staff at <strong>{{ nav_school.name }}</strong>. Class teachers register learners — they appear on your roster automatically.
+                {% elif current_user.role == 'nurse' %}
+                Welcome back. File and track medical exit requests for learners at your school.
+                {% elif current_user.role == 'guard' %}
+                Welcome back. Verify approved exits at the gate using RFID scan or manual lookup.
+                {% elif current_user.role == 'parent' %}
+                Welcome back. You receive alerts when your children sign out or sign in at the gate — open <strong>Notifications</strong> for the full history.
+                {% elif current_user.role == 'superadmin' %}
+                Welcome to CampusPass system administration. Review school registrations and manage campuses.
+                {% else %}
+                Welcome to CampusPass — verified student movement for schools.
+                {% endif %}
+            </p>
+        </div>
+        <nav class="dash-breadcrumb" aria-label="Breadcrumb">
+            <a href="{{ url_for('dashboard') }}"><i class="fa-solid fa-house"></i></a>
+            <span class="dash-breadcrumb-sep">&gt;</span>
+            <span>Dashboard</span>
+        </nav>
+    </div>
+</section>
+
+{% if current_user.role != 'superadmin' %}
+<div class="dash-stats">
+    <div class="dash-stat-card dash-stat-card--pending">
+        <span class="dash-stat-value">{{ pending_cnt }}</span>
+        <span class="dash-stat-label">Pending</span>
+    </div>
+    <div class="dash-stat-card dash-stat-card--approved">
+        <span class="dash-stat-value">{{ approved_cnt }}</span>
+        <span class="dash-stat-label">Approved</span>
+    </div>
+    <div class="dash-stat-card dash-stat-card--rejected">
+        <span class="dash-stat-value">{{ rejected_cnt }}</span>
+        <span class="dash-stat-label">Rejected</span>
+    </div>
+</div>
+{% endif %}
+
+{% if current_user.role == 'superadmin' and pending_schools %}
+<section id="school-approvals" class="card-surface mb-4">
+    <div class="card-head">
+        <i class="fa-solid fa-building-circle-check"></i>
+        Schools awaiting approval
+    </div>
+    <div class="p-0">
+        {% for s in pending_schools %}
+        <div class="school-pending-item">
+            <div>
+                <strong>{{ s.name }}</strong>
+                <div class="small text-muted">Registration #{{ s.id }} · status: pending</div>
+            </div>
+            <div class="d-flex gap-2">
+                <form method="POST" action="{{ url_for('approve_school', id=s.id) }}">
+                    <button type="submit" class="btn btn-sm btn-primary px-3">Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('delete_school', id=s.id) }}" onsubmit="return confirm('Reject and delete {{ s.name }}? This cannot be undone.');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger px-3">Delete</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% elif current_user.role == 'superadmin' %}
+<section id="school-approvals" class="card-surface mb-4">
+    <div class="card-head">
+        <i class="fa-solid fa-building-circle-check"></i>
+        Schools awaiting approval
+    </div>
+    <div class="empty-state">
+        <i class="fa-solid fa-circle-check"></i>
+        <p class="mb-0">No campuses are waiting for approval.</p>
+    </div>
+</section>
+{% endif %}
+
+{% if current_user.role == 'superadmin' and approved_schools %}
+<section id="approved-schools" class="card-surface mb-4">
+    <div class="card-head d-flex align-items-center justify-content-between">
+        <span><i class="fa-solid fa-building-flag"></i> Approved schools</span>
+        <span class="badge bg-primary">{{ approved_schools|length }}</span>
+    </div>
+    <div class="p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 1.25rem;">#</th>
+                        <th>School name</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end" style="padding-right: 1.25rem;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in approved_schools %}
+                    <tr>
+                        <td style="padding-left: 1.25rem;" class="text-muted small">{{ s.id }}</td>
+                        <td class="fw-semibold">{{ s.name }}</td>
+                        <td class="text-center"><span class="badge bg-success">Active</span></td>
+                        <td class="text-end" style="padding-right: 1.25rem;">
+                            <form method="POST" action="{{ url_for('delete_school', id=s.id) }}" onsubmit="return confirm('Delete {{ s.name }}? This will permanently remove the school and ALL its staff, learners, requests, and movements. This cannot be undone.');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger fw-semibold">
+                                    <i class="fa-solid fa-trash-can me-1"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<p class="dash-section-label"><i class="fa-solid fa-grip me-1"></i> Quick access</p>
+<div class="dash-module-grid">
+    {% if current_user.role in ['admin', 'nurse', 'teacher', 'parent'] %}
+    <a class="dash-module-card dash-module-card--green" href="{{ url_for('requests_page') }}">
+        <h2 class="dash-module-title">Movement requests</h2>
+        <div class="dash-module-icon"><i class="fa-solid fa-clipboard-list"></i></div>
+        <p class="dash-module-cta">Submit or review exit requests · CLICK HERE</p>
+    </a>
+    {% endif %}
+
+    {% if current_user.role in ['admin', 'teacher'] %}
+    <a class="dash-module-card dash-module-card--blue" href="{{ url_for('students') }}">
+        <h2 class="dash-module-title">Learner roster</h2>
+        <div class="dash-module-icon"><i class="fa-solid fa-users"></i></div>
+        <p class="dash-module-cta">
+            {% if current_user.role == 'teacher' %}
+            View your class — present or absent
+            {% else %}
+            View all school learners by class
+            {% endif %}
+        </p>
+    </a>
+    {% endif %}
+    {% if current_user.role == 'teacher' %}
+    <a class="dash-module-card dash-module-card--orange" href="{{ url_for('register_student') }}">
+        <h2 class="dash-module-title">Register learner</h2>
+        <div class="dash-module-icon"><i class="fa-solid fa-user-plus"></i></div>
+        <p class="dash-module-cta">Add a learner to your class</p>
+    </a>
+    {% endif %}
+
+    {% if current_user.role in ['teacher', 'parent', 'admin'] %}
+    <a class="dash-module-card dash-module-card--purple" href="{{ url_for('notifications') }}">
+        <h2 class="dash-module-title">Notifications{% if unread_notif_count %} <span class="dash-module-badge">{{ unread_notif_count }}</span>{% endif %}</h2>
+        <div class="dash-module-icon"><i class="fa-solid fa-bell"></i></div>
+        <p class="dash-module-cta">
+            {% if current_user.role == 'parent' %}
+            Movement alerts for your children
+            {% elif current_user.role == 'admin' %}
+            New requests and gate alerts
+            {% else %}
+            Class movement updates
+            {% endif %}
+        </p>
+    </a>
+    {% endif %}
+
+    {% if current_user.role == 'parent' %}
+    <div class="dash-module-card dash-module-card--pink">
+        <h2 class="dash-module-title">Your children</h2>
+        <div class="dash-module-icon"><i class="fa-solid fa-child"></i></div>
+        <p class="dash-module-cta">Submit exit requests from Movement requests</p>
+    </div>
+    {% endif %}
+
+    {% if current_user.role == 'admin' %}
+    <a class="dash-module-card dash-module-card--pink" href="{{ url_for('create_user') }}">
+        <h2 class="dash-module-title">Team members</h2>
+        <div class="dash-module-icon"><i class="fa-solid fa-users-gear"></i></div>
+        <p class="dash-module-cta">Invite nurses, teachers, guards &amp; parents</p>
+    </a>
+    {% endif %}
+
+    {% if current_user.role == 'guard' %}
+    <a class="dash-module-card dash-module-card--green" href="{{ url_for('guard_scanner') }}">
+        <h2 class="dash-module-title">RFID scanner</h2>
+        <div class="dash-module-icon"><i class="fa-solid fa-tower-broadcast"></i></div>
+        <p class="dash-module-cta">Scan tags at the gate · CLICK HERE</p>
+    </a>
+    <a class="dash-module-card dash-module-card--blue" href="{{ url_for('guard_panel') }}">
+        <h2 class="dash-module-title">Gate panel</h2>
+        <div class="dash-module-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <p class="dash-module-cta">Look up by ID, RFID, or name</p>
+    </a>
+    {% endif %}
+
+    {% if current_user.role == 'superadmin' %}
+    <a class="dash-module-card dash-module-card--green" href="{{ url_for('dashboard') }}#school-approvals">
+        <h2 class="dash-module-title">School approvals</h2>
+        <div class="dash-module-icon"><i class="fa-solid fa-building-circle-check"></i></div>
+        <p class="dash-module-cta">Review pending campus registrations</p>
+    </a>
+    <a class="dash-module-card dash-module-card--blue" href="{{ url_for('dashboard') }}#approved-schools">
+        <h2 class="dash-module-title">Approved schools</h2>
+        <div class="dash-module-icon"><i class="fa-solid fa-building-flag"></i></div>
+        <p class="dash-module-cta">Manage active campuses</p>
+    </a>
+    {% endif %}
+</div>
+{% endblock %}

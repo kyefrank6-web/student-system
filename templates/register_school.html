@@ -1,0 +1,55 @@
+{% extends "base_auth.html" %}
+{% from "macros/password_field.html" import password_field %}
+
+{% block title %}Register school · CampusPass{% endblock %}
+
+{% block content %}
+<div class="auth-brand">
+    <a href="{{ url_for('home') }}" class="auth-brand-mark" style="text-decoration:none;"><i class="fa-solid fa-school"></i></a>
+    <h1><a href="{{ url_for('home') }}" style="color:inherit;text-decoration:none;">Join CampusPass</a></h1>
+    <p>Register your institution. A super administrator will review and activate your campus.</p>
+</div>
+
+<div class="auth-card">
+    <div class="auth-card-header">
+        <h2>School registration</h2>
+        <p class="subtitle">Create your campus profile and primary admin account in one step.</p>
+    </div>
+    <div class="auth-card-body">
+        {% if error %}
+        <div class="alert alert-danger mb-3" role="alert">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('register_school') }}">
+            <p class="small fw-semibold text-uppercase text-muted mb-2" style="letter-spacing: 0.06em;">School</p>
+            <div class="mb-3">
+                <label class="form-label" for="school_name">Institution name</label>
+                <input id="school_name" type="text" name="school_name" class="form-control" placeholder="e.g. Lincoln High School" required>
+            </div>
+
+            <p class="small fw-semibold text-uppercase text-muted mb-2 mt-4" style="letter-spacing: 0.06em;">Primary administrator</p>
+            <div class="mb-3">
+                <label class="form-label" for="admin_name">Full name</label>
+                <input id="admin_name" type="text" name="admin_name" class="form-control" placeholder="Name as it should appear" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="admin_email">Email</label>
+                <input id="admin_email" type="email" name="admin_email" class="form-control" placeholder="admin@school.edu" required>
+            </div>
+            {{ password_field(
+                "admin_password",
+                "admin_password",
+                "Password",
+                placeholder="Choose a strong password",
+                autocomplete="new-password",
+                wrapper_class="mb-4"
+            ) }}
+
+            <button type="submit" class="btn btn-auth-primary">Submit for review</button>
+        </form>
+
+        <div class="auth-divider">Already registered?</div>
+        <a href="{{ url_for('login') }}" class="btn btn-auth-secondary text-decoration-none text-center d-block">Back to sign in</a>
+    </div>
+</div>
+{% endblock %}

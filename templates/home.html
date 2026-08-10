@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CampusPass — Safe, supervised student movements</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+</head>
+<body class="home-page">
+
+<!-- ========== NAVBAR ========== -->
+<nav class="home-nav">
+    <div class="container d-flex align-items-center justify-content-between">
+        <a href="{{ url_for('home') }}" class="home-nav-brand">
+            <div class="home-nav-mark"><i class="fa-solid fa-shield-halved"></i></div>
+            <span>CampusPass</span>
+        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('login') }}" class="btn btn-nav-ghost">Sign in</a>
+            <a href="{{ url_for('register_school') }}" class="btn btn-nav-primary">Register school</a>
+        </div>
+    </div>
+</nav>
+
+<!-- ========== HERO ========== -->
+<header class="home-hero">
+    <div class="home-hero-glow"></div>
+    <div class="container position-relative" style="z-index:2;">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <div class="hero-badge">
+                    <i class="fa-solid fa-lock me-1"></i>
+                    Built for Ugandan schools
+                </div>
+                <h1>Every student exit, <span class="hero-gradient-text">accounted for</span></h1>
+                <p class="hero-sub">
+                    CampusPass gives your school a digital approval chain — from the nurse or teacher who files the request, to the administrator who approves it, to the guard who scans the student out. No paper slips, no confusion, full accountability.
+                </p>
+                <div class="d-flex flex-wrap gap-3 mt-4">
+                    <a href="{{ url_for('register_school') }}" class="btn btn-hero-primary">
+                        <i class="fa-solid fa-school me-2"></i> Register your school
+                    </a>
+                    <a href="#how-it-works" class="btn btn-hero-outline">
+                        See how it works <i class="fa-solid fa-arrow-down ms-2"></i>
+                    </a>
+                </div>
+                <div class="hero-trust mt-4">
+                    <i class="fa-solid fa-circle-check"></i> Free to use
+                    <i class="fa-solid fa-circle-check ms-3"></i> P1 – S6 curriculum
+                    <i class="fa-solid fa-circle-check ms-3"></i> RFID ready
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="hero-illustration">
+                    <div class="hero-card hero-card-1">
+                        <div class="hc-icon bg-success-subtle text-success"><i class="fa-solid fa-clipboard-check"></i></div>
+                        <div>
+                            <div class="hc-label">Request approved</div>
+                            <div class="hc-detail">Sarah K. — sick leave, P4</div>
+                        </div>
+                    </div>
+                    <div class="hero-card hero-card-2">
+                        <div class="hc-icon bg-primary-subtle text-primary"><i class="fa-solid fa-wifi"></i></div>
+                        <div>
+                            <div class="hc-label">RFID scanned at gate</div>
+                            <div class="hc-detail">Student signed out · 11:42 AM</div>
+                        </div>
+                    </div>
+                    <div class="hero-card hero-card-3">
+                        <div class="hc-icon bg-warning-subtle text-warning"><i class="fa-solid fa-bell"></i></div>
+                        <div>
+                            <div class="hc-label">Teacher notified</div>
+                            <div class="hc-detail">Sarah returned to school · 2:15 PM</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ========== HOW IT WORKS ========== -->
+<section id="how-it-works" class="home-section">
+    <div class="container">
+        <div class="section-head text-center">
+            <h2>How CampusPass works</h2>
+            <p>Four simple steps. No training needed.</p>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-md-6 col-lg-3">
+                <div class="step-card">
+                    <div class="step-num">1</div>
+                    <div class="step-icon"><i class="fa-solid fa-file-pen"></i></div>
+                    <h3>Request filed</h3>
+                    <p>A nurse, teacher, or parent submits a movement request with the reason for early dismissal.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="step-card">
+                    <div class="step-num">2</div>
+                    <div class="step-icon"><i class="fa-solid fa-check-double"></i></div>
+                    <h3>Admin approves</h3>
+                    <p>The school administrator reviews the request and either approves or rejects it instantly.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="step-card">
+                    <div class="step-num">3</div>
+                    <div class="step-icon"><i class="fa-solid fa-id-card"></i></div>
+                    <h3>Guard verifies</h3>
+                    <p>At the gate, the guard scans the RFID card or looks up the student manually. Only approved students leave.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="step-card">
+                    <div class="step-num">4</div>
+                    <div class="step-icon"><i class="fa-solid fa-arrow-right-to-bracket"></i></div>
+                    <h3>Return tracked</h3>
+                    <p>When the student returns, a second scan logs them back in and the class teacher is notified.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== FEATURES ========== -->
+<section class="home-section home-section-alt">
+    <div class="container">
+        <div class="section-head text-center">
+            <h2>Everything your school needs</h2>
+            <p>A complete system for student safety and movement control.</p>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-wifi"></i></div>
+                    <h3>RFID scanning</h3>
+                    <p>Students tap their card at the gate. The system verifies approval in real time — no paper slips needed.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <h3>Manual fallback</h3>
+                    <p>If the scanner fails, the guard can look up any student by ID, name, or RFID tag and process them manually.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-bell"></i></div>
+                    <h3>Teacher alerts</h3>
+                    <p>Class teachers receive instant notifications when a student in their class leaves campus or returns.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-file-excel"></i></div>
+                    <h3>Bulk import</h3>
+                    <p>Upload an entire class roster from Excel in one click. Download templates, import, done.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-users-viewfinder"></i></div>
+                    <h3>Live attendance</h3>
+                    <p>The roster shows real-time present/absent status for every learner. Downloadable at any time.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <h3>Uganda curriculum</h3>
+                    <p>Classes from P1 to P7 and S1 to S6 are built right in. No configuration required.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== ROLES ========== -->
+<section class="home-section">
+    <div class="container">
+        <div class="section-head text-center">
+            <h2>A role for everyone on campus</h2>
+            <p>Every user has a tailored experience based on their responsibilities.</p>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-md-6 col-xl-4">
+                <div class="role-card">
+                    <div class="role-card-head role-superadmin">
+                        <div class="role-icon"><i class="fa-solid fa-crown"></i></div>
+                        <h3>Super Admin</h3>
+                    </div>
+                    <div class="role-card-body">
+                        <ul>
+                            <li>Approves or removes school registrations</li>
+                            <li>Oversees the entire platform</li>
+                            <li>Manages the list of active campuses</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="role-card">
+                    <div class="role-card-head role-admin">
+                        <div class="role-icon"><i class="fa-solid fa-user-tie"></i></div>
+                        <h3>School Admin</h3>
+                    </div>
+                    <div class="role-card-body">
+                        <ul>
+                            <li>Creates staff accounts (teachers, nurses, guards, parents)</li>
+                            <li>Views the full learner roster (class teachers register learners)</li>
+                            <li>Approves or rejects movement requests</li>
+                            <li>Downloads reports and clears resolved requests</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="role-card">
+                    <div class="role-card-head role-teacher">
+                        <div class="role-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+                        <h3>Teacher</h3>
+                    </div>
+                    <div class="role-card-body">
+                        <ul>
+                            <li>Assigned to one class (e.g. P3 or S2)</li>
+                            <li>Registers and imports learners for their class</li>
+                            <li>Views class roster with live present/absent status</li>
+                            <li>Receives notifications when students leave or return</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="role-card">
+                    <div class="role-card-head role-nurse">
+                        <div class="role-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+                        <h3>Nurse</h3>
+                    </div>
+                    <div class="role-card-body">
+                        <ul>
+                            <li>Files medical exit requests for sick students</li>
+                            <li>Provides the reason directly in the system</li>
+                            <li>Tracks the status of every request they submit</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="role-card">
+                    <div class="role-card-head role-guard">
+                        <div class="role-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <h3>Guard</h3>
+                    </div>
+                    <div class="role-card-body">
+                        <ul>
+                            <li>Verifies students at the gate via RFID scan</li>
+                            <li>Uses the manual gate panel when the scanner fails</li>
+                            <li>Signs students out and back in with full logging</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="role-card">
+                    <div class="role-card-head role-parent">
+                        <div class="role-icon"><i class="fa-solid fa-people-roof"></i></div>
+                        <h3>Parent</h3>
+                    </div>
+                    <div class="role-card-body">
+                        <ul>
+                            <li>Linked to their child in the system</li>
+                            <li>Can be contacted when a student is released</li>
+                            <li>Provides an extra layer of accountability</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== CTA ========== -->
+<section class="home-cta">
+    <div class="container text-center">
+        <h2>Ready to secure your campus?</h2>
+        <p>Register your school in under a minute. It's completely free.</p>
+        <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+            <a href="{{ url_for('register_school') }}" class="btn btn-hero-primary">
+                <i class="fa-solid fa-school me-2"></i> Register your school
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-hero-outline">
+                Sign in <i class="fa-solid fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer class="home-footer">
+    <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-2">
+            <div class="home-nav-mark" style="width:28px;height:28px;font-size:0.75rem;"><i class="fa-solid fa-shield-halved"></i></div>
+            <span class="fw-bold" style="color:#cbd5e1;">CampusPass</span>
+        </div>
+        <div class="home-footer-links">
+            <a href="{{ url_for('login') }}">Sign in</a>
+            <a href="{{ url_for('register_school') }}">Register</a>
+            <a href="#how-it-works">How it works</a>
+        </div>
+        <div class="small" style="color:#475569;">&copy; {{ 2026 }} CampusPass. All rights reserved.</div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications · CampusPass{% endblock %}
+{% block page_heading %}Notifications{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap align-items-start justify-content-between gap-3">
+    <div>
+        <h2>Activity notifications</h2>
+        <p>
+            {% if current_user.role == 'parent' %}
+            Alerts when your child signs out or signs in at the gate, plus updates when an exit request is approved or rejected.
+            {% elif current_user.role == 'admin' %}
+            School alerts including new exit requests and gate activity summaries.
+            {% else %}
+            When a learner in your class is released from school or returns, you receive a notice here.
+            {% endif %}
+        </p>
+    </div>
+    {% if notifications %}
+    <form method="POST" action="{{ url_for('mark_notifications_read') }}">
+        <button type="submit" class="btn btn-outline-primary fw-semibold">
+            <i class="fa-solid fa-check-double me-1"></i> Mark all as read
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+<div class="card-surface">
+    <div class="card-head">
+        <i class="fa-solid fa-bell"></i>
+        Recent notifications
+    </div>
+    <div class="card-body p-0">
+        {% if notifications %}
+        <div class="list-group list-group-flush">
+            {% for n in notifications %}
+            <div class="list-group-item d-flex align-items-start gap-3 py-3 {{ '' if n.is_read else 'bg-primary bg-opacity-10' }}">
+                <i class="fa-solid {% if 'returned' in n.message %}fa-arrow-right-to-bracket text-success{% elif 'released' in n.message %}fa-arrow-right-from-bracket text-danger{% else %}fa-circle-info text-primary{% endif %} mt-1"></i>
+                <div>
+                    <p class="mb-1" style="line-height: 1.5;">{{ n.message }}</p>
+                    <small class="text-muted">
+                        {{ n.created_at.strftime('%d %b %Y, %H:%M') if n.created_at else '' }}
+                        {% if not n.is_read %}· <span class="fw-semibold text-primary">New</span>{% endif %}
+                    </small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-bell-slash"></i>
+            <p class="mb-0">No notifications yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

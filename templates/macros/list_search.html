@@ -1,0 +1,25 @@
+{% macro list_search_bar(placeholder='Search…', input_id='') %}
+<div class="list-search-wrap">
+    <i class="fa-solid fa-magnifying-glass list-search-icon" aria-hidden="true"></i>
+    <input
+        type="search"
+        class="list-search-input"
+        {% if input_id %}id="{{ input_id }}"{% endif %}
+        placeholder="{{ placeholder }}"
+        data-list-search-input
+        autocomplete="off"
+        spellcheck="false"
+    >
+    <button type="button" class="list-search-clear d-none" data-list-search-clear aria-label="Clear search" title="Clear">
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+</div>
+{% endmacro %}
+
+{% macro list_search_toolbar(placeholder, input_id='', label='Search') %}
+<div class="list-search-toolbar">
+    <label class="list-search-label" {% if input_id %}for="{{ input_id }}"{% endif %}>{{ label }}</label>
+    {{ list_search_bar(placeholder, input_id) }}
+    <span class="list-search-meta" data-list-search-meta aria-live="polite"></span>
+</div>
+{% endmacro %}

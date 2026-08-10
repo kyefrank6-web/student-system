@@ -1,0 +1,10 @@
+{% macro learner_avatar(learner, size='md') %}
+{% set photo = url_for('student_photo', filename=learner.photo_filename) if learner and learner.photo_filename else none %}
+<span class="learner-avatar learner-avatar--{{ size }}{% if not photo %} learner-avatar--placeholder{% endif %}">
+    {% if photo %}
+    <img src="{{ photo }}" alt="" width="40" height="40" loading="lazy">
+    {% else %}
+    <i class="fa-solid fa-user" aria-hidden="true"></i>
+    {% endif %}
+</span>
+{% endmacro %}

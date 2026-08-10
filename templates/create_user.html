@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% from "macros/password_field.html" import password_field %}
+{% from "macros/list_search.html" import list_search_toolbar %}
+
+{% block title %}Team members · CampusPass{% endblock %}
+{% block page_heading %}Team members{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap align-items-end justify-content-between gap-3">
+    <div>
+        <h2>Team members</h2>
+        <p class="mb-0">Manage staff, parent logins, and new accounts for <strong>{{ nav_school.name if nav_school else 'your school' }}</strong>.</p>
+    </div>
+    <div class="team-view-picker">
+        <label class="team-view-picker-label" for="team-view-select">Show</label>
+        <select id="team-view-select" class="form-select team-view-select" aria-label="Team members section">
+            <option value="{{ url_for('create_user', view='staff') }}" {% if view == 'staff' %}selected{% endif %}>Staff</option>
+            <option value="{{ url_for('create_user', view='parents') }}" {% if view == 'parents' %}selected{% endif %}>Parent accounts</option>
+            <option value="{{ url_for('create_user', view='create') }}" {% if view == 'create' %}selected{% endif %}>Create account</option>
+        </select>
+    </div>
+</div>
+
+{% if view == 'staff' %}
+<div class="card-surface">
+    <div class="card-head d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span><i class="fa-solid fa-user-tie"></i> School staff</span>
+        <span class="badge bg-primary">{{ staff_members|length }}</span>
+    </div>
+    <div class="card-body p-0{% if staff_members %} list-search-panel{% endif %}"{% if staff_members %} data-list-search-panel{% endif %}>
+        {% if staff_members %}
+        {{ list_search_toolbar('Search by name, email, role, or class…', 'staff-accounts-search') }}
+        <div class="table-responsive">
+            <table class="table table-app table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 1.25rem;">Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Class</th>
+                        <th class="text-end" style="padding-right: 1.25rem;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in staff_members %}
+                    <tr data-search-text="{{ (u.name or '') }} {{ u.email or '' }} {{ u.role }} {{ u.class_level or '' }} {{ u.stream or '' }}">
+                        <td style="padding-left: 1.25rem;" class="fw-semibold">{{ u.name or '—' }}</td>
+                        <td class="small">{{ u.email }}</td>
+                        <td><span class="badge badge-role text-capitalize">{{ u.role }}</span></td>
+                        <td>
+                            {% if u.role == 'teacher' and u.class_level %}
+                            {{ u.class_level }}{% if u.stream %} {{ u.stream }}{% endif %}
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end text-nowrap" style="padding-right: 1.25rem;">
+                            <a href="{{ url_for('edit_staff', user_id=u.id) }}" class="btn btn-sm btn-outline-primary btn-table">
+                                <i class="fa-solid fa-pen me-1"></i> Edit
+                            </a>
+                            <form method="POST" action="{{ url_for('delete_staff', user_id=u.id) }}" class="d-inline" onsubmit="return confirm('Delete ' + {{ u.name|tojson }} + '? This cannot be undone.');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger btn-table">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="list-search-empty d-none" data-list-search-empty>
+            <i class="fa-solid fa-magnifying-glass"></i>
+            No staff accounts match your search.
+        </p>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-user-tie"></i>
+            <p class="mb-3">No staff accounts yet.</p>
+            <a href="{{ url_for('create_user', view='create') }}" class="btn btn-primary fw-semibold">
+                <i class="fa-solid fa-user-plus me-1"></i> Create account
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% elif view == 'parents' %}
+<div class="card-surface">
+    <div class="card-head d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span><i class="fa-solid fa-people-roof"></i> Parent accounts</span>
+        <span class="badge bg-primary">{{ parent_accounts|length }}</span>
+    </div>
+    <div class="card-body p-0{% if parent_accounts %} list-search-panel{% endif %}"{% if parent_accounts %} data-list-search-panel{% endif %}>
+        {% if parent_accounts %}
+        {{ list_search_toolbar('Search by parent name or email…', 'parent-accounts-search') }}
+        <div class="table-responsive">
+            <table class="table table-app table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 1.25rem;">Name</th>
+                        <th>Email</th>
+                        <th>Linked learners</th>
+                        <th class="text-end" style="padding-right: 1.25rem;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in parent_accounts %}
+                    {% set n = parent_child_counts.get(u.id, 0) %}
+                    <tr data-search-text="{{ (u.name or '') }} {{ u.email or '' }} parent {{ n }} learners">
+                        <td style="padding-left: 1.25rem;" class="fw-semibold">{{ u.name or '—' }}</td>
+                        <td class="small">{{ u.email }}</td>
+                        <td>
+                            {% if n %}
+                            <span class="badge bg-light text-dark border">{{ n }} learner{% if n != 1 %}s{% endif %}</span>
+                            {% else %}
+                            <span class="text-muted small">None linked</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end text-nowrap" style="padding-right: 1.25rem;">
+                            <a href="{{ url_for('edit_staff', user_id=u.id) }}" class="btn btn-sm btn-outline-primary btn-table">
+                                <i class="fa-solid fa-pen me-1"></i> Edit
+                            </a>
+                            <form method="POST" action="{{ url_for('delete_staff', user_id=u.id) }}" class="d-inline" onsubmit="return confirm('Delete ' + {{ u.name|tojson }} + '? Linked learners will be unlinked.');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger btn-table">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="list-search-empty d-none" data-list-search-empty>
+            <i class="fa-solid fa-magnifying-glass"></i>
+            No parent accounts match your search.
+        </p>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-people-roof"></i>
+            <p class="mb-0">No parent accounts yet. They are often created automatically when a class teacher registers a learner with a parent email.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% else %}
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card-surface">
+            <div class="card-head">
+                <i class="fa-solid fa-user-plus"></i>
+                Create account
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('create_user', view='create') }}" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold" for="name">Full name</label>
+                        <input id="name" name="name" type="text" class="form-control" placeholder="Displayed in the app" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold" for="email">Email</label>
+                        <input id="email" name="email" type="email" class="form-control" placeholder="name@school.edu" required>
+                    </div>
+                    <div class="col-md-6">
+                        {{ password_field(
+                            "password",
+                            "password",
+                            "Temporary password",
+                            placeholder="Share securely after creation",
+                            autocomplete="new-password",
+                            label_class="form-label small fw-semibold",
+                            wrapper_class=""
+                        ) }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold" for="role">Role</label>
+                        <select id="role" name="role" class="form-select" required onchange="var t=this.value==='teacher'; document.getElementById('class-level-group').style.display=t?'':'none'; document.getElementById('stream-group').style.display=t?'':'none';">
+                            <option value="" selected disabled>Choose a role</option>
+                            <option value="nurse">Nurse — submit exit requests</option>
+                            <option value="teacher">Teacher — assigned to a class</option>
+                            <option value="guard">Guard — RFID / gate operations</option>
+                            <option value="parent">Parent — portal access</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6" id="class-level-group" style="display: none;">
+                        <label class="form-label small fw-semibold" for="class_level">Assign class</label>
+                        <select id="class_level" name="class_level" class="form-select">
+                            <option value="" selected disabled>Select class</option>
+                            <optgroup label="Primary">
+                                {% for code, lbl in ug_primary_levels %}
+                                <option value="{{ code }}">{{ lbl }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            <optgroup label="Secondary (O-level &amp; A-level)">
+                                {% for code, lbl in ug_secondary_levels %}
+                                <option value="{{ code }}">{{ lbl }}</option>
+                                {% endfor %}
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="col-md-6" id="stream-group" style="display: none;">
+                        <label class="form-label small fw-semibold" for="stream">Stream <span class="text-muted fw-normal">(optional)</span></label>
+                        <input id="stream" name="stream" type="text" class="form-control" placeholder="e.g. East, West, A, B">
+                        <div class="form-text small">Leave blank if the school does not use streams.</div>
+                    </div>
+                    <div class="col-12 pt-2">
+                        <button type="submit" class="btn btn-primary fw-semibold px-4">
+                            Create user
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card-surface h-100" style="background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);">
+            <div class="card-head border-0" style="background: transparent;">
+                <i class="fa-solid fa-circle-info text-primary"></i>
+                Role guide
+            </div>
+            <div class="card-body small text-muted lh-lg">
+                <p class="mb-3"><strong class="text-dark">Teacher</strong> is assigned to one class (P1–P7 or S1–S6) and optionally a stream. They register learners for that class.</p>
+                <p class="mb-3"><strong class="text-dark">Nurse</strong> can file movement requests for any learner at the school.</p>
+                <p class="mb-3"><strong class="text-dark">Guard</strong> handles RFID scans and gate lookups.</p>
+                <p class="mb-0"><strong class="text-dark">Parent</strong> accounts are usually created when a teacher registers a learner with a parent email.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+(function () {
+  var sel = document.getElementById('team-view-select');
+  if (sel) {
+    sel.addEventListener('change', function () {
+      if (sel.value) window.location.href = sel.value;
+    });
+  }
+})();
+</script>
+{% endblock %}

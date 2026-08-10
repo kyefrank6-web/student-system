@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% from "macros/photo_upload.html" import learner_photo_field %}
+
+{% block title %}Edit learner · CampusPass{% endblock %}
+{% block page_heading %}Edit learner{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap align-items-start justify-content-between gap-3">
+    <div>
+        <h2>Edit {{ learner.name }}</h2>
+        <p>Update class, RFID tag, or linked parent. Learner ID <strong><code>{{ display_student_id(learner) }}</code></strong>.</p>
+    </div>
+    <a href="{{ url_for('students', klass=learner.class_level) }}" class="btn btn-outline-secondary fw-semibold shrink-0">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to roster
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card-surface">
+            <div class="card-head">
+                <i class="fa-solid fa-pen"></i>
+                Learner details
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('edit_student', student_id=learner.id) }}" class="row g-3"{% if is_teacher %} enctype="multipart/form-data"{% endif %}>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold" for="name">Full name</label>
+                        <input id="name" name="name" type="text" class="form-control" value="{{ learner.name }}" required>
+                    </div>
+                    {% if is_teacher %}
+                    <div class="col-12">
+                        {{ learner_photo_field(
+                            current_url=url_for('student_photo', filename=learner.photo_filename) if learner.photo_filename else none,
+                            show_remove=learner.photo_filename is not none
+                        ) }}
+                    </div>
+                    {% elif learner.photo_filename %}
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Profile photo</label>
+                        <img src="{{ url_for('student_photo', filename=learner.photo_filename) }}" alt="Profile photo for {{ learner.name }}" class="learner-photo-preview">
+                    </div>
+                    {% endif %}
+                    {% if is_teacher and teacher_class %}
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Class</label>
+                        <input type="text" class="form-control" value="{{ teacher_class }}" disabled>
+                        <input type="hidden" name="class_level" value="{{ teacher_class }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Stream</label>
+                        <input type="text" class="form-control" value="{{ teacher_stream or '—' }}" disabled>
+                    </div>
+                    {% else %}
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold" for="class_level">Class</label>
+                        <select id="class_level" name="class_level" class="form-select" required>
+                            <optgroup label="Primary">
+                                {% for code, lbl in ug_primary_levels %}
+                                <option value="{{ code }}" {% if learner.class_level == code %}selected{% endif %}>{{ code }} — {{ lbl }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            <optgroup label="Secondary">
+                                {% for code, lbl in ug_secondary_levels %}
+                                <option value="{{ code }}" {% if learner.class_level == code %}selected{% endif %}>{{ code }} — {{ lbl }}</option>
+                                {% endfor %}
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold" for="stream">Stream <span class="text-muted fw-normal">(optional)</span></label>
+                        <input id="stream" name="stream" type="text" class="form-control" value="{{ learner.stream or '' }}" placeholder="e.g. East">
+                    </div>
+                    {% endif %}
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold" for="rfid_tag">RFID tag <span class="text-muted fw-normal">(optional)</span></label>
+                        <input id="rfid_tag" name="rfid_tag" type="text" class="form-control font-monospace" value="{{ learner.rfid_tag or '' }}">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Parent / guardian portal</label>
+                        {% if linked_parent %}
+                        <p class="small text-muted mb-2">Currently linked: <strong>{{ linked_parent.name }}</strong> ({{ linked_parent.email }}). Enter a new email to replace or create another account.</p>
+                        {% else %}
+                        <p class="small text-muted mb-2">Enter parent details to create a login automatically.</p>
+                        {% endif %}
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted" for="parent_name">Parent name</label>
+                                <input id="parent_name" name="parent_name" type="text" class="form-control" value="{{ linked_parent.name if linked_parent else '' }}" placeholder="e.g. Mary Mukasa">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted" for="parent_email">Parent email (login)</label>
+                                <input id="parent_email" name="parent_email" type="email" class="form-control" value="{{ linked_parent.email if linked_parent else '' }}" placeholder="parent@example.com">
+                            </div>
+                        </div>
+                    </div>
+                    {% if parents %}
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold" for="parent_id">Or link existing parent</label>
+                        <select id="parent_id" name="parent_id" class="form-select">
+                            <option value="">— Keep / none —</option>
+                            {% for p in parents %}
+                            <option value="{{ p.id }}" {% if learner.parent_id == p.id %}selected{% endif %}>{{ p.name }} ({{ p.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                    <div class="col-12 pt-2 d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn text-white fw-semibold border-0 px-4" style="background: linear-gradient(135deg, #4f46e5, #6366f1); border-radius: 10px;">
+                            Save changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card-surface border-danger border-opacity-25">
+            <div class="card-head text-danger">
+                <i class="fa-solid fa-trash-can"></i>
+                Remove learner
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">Deletes this learner and their movement history. This cannot be undone.</p>
+                <form method="POST" action="{{ url_for('delete_student', student_id=learner.id) }}" onsubmit="return confirm('Permanently remove {{ learner.name }}?');">
+                    <button type="submit" class="btn btn-outline-danger fw-semibold w-100">Delete learner</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% if is_teacher %}
+<script src="{{ url_for('static', filename='js/photo-preview.js') }}"></script>
+{% endif %}
+{% endblock %}

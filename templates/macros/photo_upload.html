@@ -1,0 +1,33 @@
+{% macro learner_photo_field(input_id='photo', preview_id='photo-preview', current_url=none, show_remove=false) %}
+<div class="learner-photo-field mb-3">
+    <label class="form-label small fw-semibold" for="{{ input_id }}">Profile photo <span class="text-muted fw-normal">(optional)</span></label>
+    <div class="d-flex flex-wrap align-items-start gap-3">
+        <div class="learner-photo-preview-wrap" id="{{ preview_id }}-wrap">
+            {% if current_url %}
+            <img id="{{ preview_id }}" class="learner-photo-preview" src="{{ current_url }}" alt="Current profile photo">
+            {% else %}
+            <div id="{{ preview_id }}" class="learner-photo-preview learner-photo-preview--empty" aria-hidden="true">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            {% endif %}
+        </div>
+        <div class="flex-grow-1" style="min-width: 200px;">
+            <input
+                id="{{ input_id }}"
+                name="{{ input_id }}"
+                type="file"
+                class="form-control"
+                accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                data-photo-preview-target="{{ preview_id }}"
+            >
+            <p class="small text-muted mb-0 mt-1">JPG, PNG, or WebP · max 2&nbsp;MB</p>
+            {% if show_remove and current_url %}
+            <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" name="remove_photo" value="1" id="{{ input_id }}-remove">
+                <label class="form-check-label small" for="{{ input_id }}-remove">Remove current photo</label>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endmacro %}

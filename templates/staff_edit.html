@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% from "macros/password_field.html" import password_field %}
+
+{% block title %}Edit team member · CampusPass{% endblock %}
+{% block page_heading %}Team members{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap align-items-start justify-content-between gap-3">
+    <div>
+        <h2>Edit {{ member.name or 'team member' }}</h2>
+        <p>Update role, class assignment, or sign-in details for this account.</p>
+    </div>
+    <a href="{{ url_for('create_user', view=list_view|default('staff')) }}" class="btn btn-outline-secondary fw-semibold shrink-0">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to team list
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card-surface">
+            <div class="card-head">
+                <i class="fa-solid fa-user-pen"></i>
+                Account details
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('edit_staff', user_id=member.id) }}" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold" for="name">Full name</label>
+                        <input id="name" name="name" type="text" class="form-control" value="{{ member.name or '' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold" for="email">Work email</label>
+                        <input id="email" name="email" type="email" class="form-control" value="{{ member.email or '' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        {{ password_field(
+                            "password",
+                            "password",
+                            "New password",
+                            placeholder="Leave blank to keep current password",
+                            autocomplete="new-password",
+                            required=false,
+                            label_class="form-label small fw-semibold",
+                            wrapper_class=""
+                        ) }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold" for="role">Role</label>
+                        <select id="role" name="role" class="form-select" required onchange="var t=this.value==='teacher'; document.getElementById('class-level-group').style.display=t?'':'none'; document.getElementById('stream-group').style.display=t?'':'none';">
+                            <option value="nurse" {% if member.role == 'nurse' %}selected{% endif %}>Nurse</option>
+                            <option value="teacher" {% if member.role == 'teacher' %}selected{% endif %}>Teacher</option>
+                            <option value="guard" {% if member.role == 'guard' %}selected{% endif %}>Guard</option>
+                            <option value="parent" {% if member.role == 'parent' %}selected{% endif %}>Parent</option>
+                        </select>
+                    </div>
+                    <div id="class-level-group" class="col-md-6" style="display: {% if member.role == 'teacher' %}block{% else %}none{% endif %};">
+                        <label class="form-label small fw-semibold" for="class_level">Assign class</label>
+                        <select id="class_level" name="class_level" class="form-select">
+                            <option value="" disabled {% if not member.class_level %}selected{% endif %}>Select class</option>
+                            <optgroup label="Primary">
+                                {% for code, lbl in ug_primary_levels %}
+                                <option value="{{ code }}" {% if member.class_level == code %}selected{% endif %}>{{ lbl }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            <optgroup label="Secondary">
+                                {% for code, lbl in ug_secondary_levels %}
+                                <option value="{{ code }}" {% if member.class_level == code %}selected{% endif %}>{{ lbl }}</option>
+                                {% endfor %}
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div id="stream-group" class="col-md-6" style="display: {% if member.role == 'teacher' %}block{% else %}none{% endif %};">
+                        <label class="form-label small fw-semibold" for="stream">Stream <span class="text-muted fw-normal">(optional)</span></label>
+                        <input id="stream" name="stream" type="text" class="form-control" value="{{ member.stream or '' }}" placeholder="e.g. East, A">
+                    </div>
+                    <div class="col-12 pt-2 d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary fw-semibold px-4">
+                            Save changes
+                        </button>
+                        <a href="{{ url_for('create_user', view=list_view|default('staff')) }}" class="btn btn-outline-secondary fw-semibold">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card-surface">
+            <div class="card-head">
+                <i class="fa-solid fa-triangle-exclamation text-danger"></i>
+                Danger zone
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-3">
+                    {% if member.role == 'parent' %}
+                    Deleting a parent removes their login. Learners linked to this parent will be unlinked but stay on the roster.
+                    {% else %}
+                    This permanently removes the account. Historical movement records are kept, but they can no longer sign in.
+                    {% endif %}
+                </p>
+                <form method="POST" action="{{ url_for('delete_staff', user_id=member.id) }}" onsubmit="return confirm('Delete ' + {{ member.name|tojson }} + '? This cannot be undone.');">
+                    <button type="submit" class="btn btn-outline-danger fw-semibold w-100">
+                        <i class="fa-solid fa-trash-can me-1"></i> Delete account
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

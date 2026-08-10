@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% from "macros/photo_upload.html" import learner_photo_field %}
+
+{% block title %}Register learner · CampusPass{% endblock %}
+{% block page_heading %}Register learner{% endblock %}
+
+{% block content %}
+{% if session.get('parent_import_logins') %}
+<div class="alert alert-success border-0 shadow-sm mb-4 d-flex flex-wrap align-items-center justify-content-between gap-2" role="alert">
+    <span>
+        <i class="fa-solid fa-file-excel me-2"></i>
+        Parent portal logins from your last import are ready to download.
+    </span>
+    <a href="{{ url_for('download_parent_import_logins') }}" class="btn btn-sm btn-success fw-semibold">
+        <i class="fa-solid fa-download me-1"></i> Download parent logins (.xlsx)
+    </a>
+</div>
+{% endif %}
+<div class="page-header d-flex flex-wrap align-items-start justify-content-between gap-3">
+    <div>
+        <h2>
+            {% if is_teacher and teacher_class %}
+            Add a learner to {{ teacher_class }}{% if teacher_stream %} {{ teacher_stream }}{% endif %}
+            {% else %}
+            Add a learner to your school
+            {% endif %}
+        </h2>
+        <p>Classes follow the <strong>Uganda National Curriculum</strong>: Primary <strong>P1–P7</strong>, then Secondary <strong>S1–S6</strong>.</p>
+    </div>
+    <a href="{{ url_for('students') }}" class="btn btn-outline-secondary fw-semibold shrink-0">
+        <i class="fa-solid fa-users me-1"></i> Learner roster
+    </a>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card-surface">
+            <div class="card-head d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <span><i class="fa-solid fa-file-excel"></i> Import learners from Excel</span>
+                <a href="{{ url_for('student_import_template') }}" class="btn btn-sm btn-outline-primary fw-semibold">
+                    <i class="fa-solid fa-download me-1"></i> Download template (.xlsx)
+                </a>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-3">
+                    Use the template's first sheet. Row&nbsp;1 must be headers. Required columns: <strong>Name</strong> and <strong>Class</strong> (P1–P7 or S1–S6).
+                    Optional: <strong>Stream</strong>, <strong>RFID</strong>, <strong>Parent_Name</strong>, <strong>Parent_Email</strong> (a parent login is created automatically; download the credentials spreadsheet after import).
+                    {% if is_teacher and teacher_class %}
+                    <br/><strong>Note:</strong> Only rows with class <strong>{{ teacher_class }}</strong> will be imported. Rows for other classes are skipped.
+                    {% endif %}
+                </p>
+                <form method="POST" action="{{ url_for('student_import_upload') }}" enctype="multipart/form-data" class="row g-2 align-items-end">
+                    <div class="col-md-8 col-lg-6">
+                        <label class="form-label small fw-semibold" for="import_file">Excel file (.xlsx)</label>
+                        <input id="import_file" class="form-control" type="file" name="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <button type="submit" class="btn btn-success w-100 fw-semibold">
+                            <i class="fa-solid fa-upload me-1"></i> Upload &amp; import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card-surface">
+            <div class="card-head">
+                <i class="fa-solid fa-user-plus"></i>
+                New learner details
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('register_student') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="name">Full name</label>
+                        <input id="name" name="name" type="text" class="form-control" required placeholder="As it should appear on records">
+                    </div>
+                    {{ learner_photo_field() }}
+                    {% if is_teacher and teacher_class %}
+                    <input type="hidden" name="class_level" value="{{ teacher_class }}">
+                    <input type="hidden" name="stream" value="{{ teacher_stream or '' }}">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Class</label>
+                        <input type="text" class="form-control" value="{{ teacher_class }}{% if teacher_stream %} {{ teacher_stream }}{% endif %}" disabled>
+                    </div>
+                    {% else %}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-7">
+                            <label class="form-label small fw-semibold" for="class_level">Class</label>
+                            <select id="class_level" name="class_level" class="form-select" required>
+                                <option value="" selected disabled>Select class</option>
+                                <optgroup label="Primary">
+                                    {% for code, lbl in ug_primary_levels %}
+                                    <option value="{{ code }}">{{ lbl }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                                <optgroup label="Secondary (O-level &amp; A-level)">
+                                    {% for code, lbl in ug_secondary_levels %}
+                                    <option value="{{ code }}">{{ lbl }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small fw-semibold" for="stream">Stream <span class="text-muted fw-normal">(optional)</span></label>
+                            <input id="stream" name="stream" type="text" class="form-control" placeholder="e.g. East, A">
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="rfid_tag">RFID tag <span class="text-muted fw-normal">(optional)</span></label>
+                        <input id="rfid_tag" name="rfid_tag" type="text" class="form-control" placeholder="Card or wristband ID">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Parent / guardian portal</label>
+                        <p class="small text-muted mb-2">Enter details to create a parent login automatically, or pick an existing parent below.</p>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted" for="parent_name">Parent name</label>
+                                <input id="parent_name" name="parent_name" type="text" class="form-control" placeholder="e.g. Mary Mukasa">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted" for="parent_email">Parent email (login)</label>
+                                <input id="parent_email" name="parent_email" type="email" class="form-control" placeholder="parent@example.com">
+                            </div>
+                        </div>
+                    </div>
+                    {% if parents %}
+                    <div class="mb-4">
+                        <label class="form-label small fw-semibold" for="parent_id">Or link existing parent</label>
+                        <select id="parent_id" name="parent_id" class="form-select">
+                            <option value="">— None —</option>
+                            {% for p in parents %}
+                            <option value="{{ p.id }}">{{ p.name }} ({{ p.email }})</option>
+                            {% endfor %}
+                        </select>
+                        <p class="small text-muted mt-1 mb-0">If you enter a parent email above, that takes priority over this list.</p>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn text-white fw-semibold border-0 px-4" style="background: linear-gradient(135deg, #4f46e5, #6366f1); border-radius: 10px;">
+                            Save learner
+                        </button>
+                        <a href="{{ url_for('students') }}" class="btn btn-outline-secondary fw-semibold">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card-surface h-100" style="background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);">
+            <div class="card-head border-0" style="background: transparent;">
+                <i class="fa-solid fa-circle-info text-primary"></i>
+                After you save
+            </div>
+            <div class="card-body small text-muted lh-lg">
+                <p class="mb-3">The learner appears on the <strong>Learner roster</strong> with a <strong>Present / Absent</strong> status based on gate scans.</p>
+                <p class="mb-3">When you add a parent email, CampusPass creates their login and shows you a <strong>temporary password</strong> once — share it with the family.</p>
+                <p class="mb-0">You can only add learners in your assigned class. The school administrator sees them on the full roster as soon as you save.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/photo-preview.js') }}"></script>
+{% endblock %}

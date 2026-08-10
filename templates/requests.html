@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% from "macros/list_search.html" import list_search_toolbar %}
+{% from "macros/student_picker.html" import student_picker %}
+
+{% block title %}Requests · CampusPass{% endblock %}
+{% block page_heading %}Movement requests{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap align-items-start justify-content-between gap-3">
+    <div>
+        <h2>Student exit requests</h2>
+        <p>Every row is a request to leave campus. An approved request allows one exit; it closes automatically when the learner signs back in.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2 shrink-0">
+        {% if requests %}
+        <a href="{{ url_for('download_requests') }}" class="btn btn-outline-primary fw-semibold">
+            <i class="fa-solid fa-download me-1"></i> Download (.xlsx)
+        </a>
+        {% endif %}
+        {% if current_user.role == 'admin' and requests %}
+        <form method="POST" action="{{ url_for('clear_requests') }}" onsubmit="return confirm('This will permanently delete completed, approved, and rejected requests. Continue?');">
+            <button type="submit" class="btn btn-outline-danger fw-semibold">
+                <i class="fa-solid fa-trash-can me-1"></i> Clear resolved
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if current_user.role in ['nurse', 'teacher', 'parent'] %}
+<div class="card-surface mb-4">
+    <div class="card-head">
+        <i class="fa-solid fa-plus"></i>
+        New request
+    </div>
+    <div class="card-body">
+        {% if roster_students %}
+        <form method="POST" action="{{ url_for('create_request') }}" class="row g-3 align-items-end">
+            <div class="col-md-5 col-lg-4">
+                {% if current_user.role == 'nurse' and roster_picker %}
+                {{ student_picker(roster_picker) }}
+                {% else %}
+                <label class="form-label small fw-semibold mb-1" for="student_id">Learner</label>
+                <select id="student_id" name="student_id" class="form-select" required>
+                    <option value="" disabled selected>Select learner</option>
+                    {% if current_user.role == 'parent' %}
+                    {% for st in roster_students %}
+                    <option value="{{ st.id }}">{{ st.name }} — {{ st.class_level }}{% if st.stream %} {{ st.stream }}{% endif %}</option>
+                    {% endfor %}
+                    {% else %}
+                    <optgroup label="Primary (P1–P7)">
+                        {% for st in roster_students %}
+                        {% if st.class_level and st.class_level[0] == 'P' %}
+                        <option value="{{ st.id }}">{{ st.name }} — {{ st.class_level }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="Secondary (S1–S6)">
+                        {% for st in roster_students %}
+                        {% if st.class_level and st.class_level[0] == 'S' %}
+                        <option value="{{ st.id }}">{{ st.name }} — {{ st.class_level }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </optgroup>
+                    {% endif %}
+                </select>
+                {% endif %}
+            </div>
+            <div class="col-md-5 col-lg-6">
+                <label class="form-label small fw-semibold mb-1" for="reason">Reason</label>
+                <input id="reason" name="reason" type="text" class="form-control" placeholder="Illness, appointment, family matter…" required>
+            </div>
+            <div class="col-md-2 col-lg-2">
+                <button type="submit" class="btn w-100 text-white fw-semibold border-0" style="background: linear-gradient(135deg, #059669, #10b981); border-radius: 10px; padding: 0.55rem;">
+                    Submit
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div class="alert alert-info mb-0" role="alert">
+            {% if current_user.role == 'parent' %}
+            <strong>No children linked to your account.</strong> Ask the school administrator to link your parent account when registering learners.
+            {% else %}
+            <strong>No learners on file.</strong> Ask the class teacher to <strong>Register learner</strong> before you can submit movement requests.
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% if current_user.role == 'nurse' and roster_picker %}
+<script src="{{ url_for('static', filename='js/student-picker.js') }}"></script>
+{% endif %}
+{% endif %}
+
+<div class="card-surface">
+    <div class="card-head">
+        <i class="fa-solid fa-list"></i>
+        All requests
+    </div>
+    <div class="card-body p-0{% if requests %} list-search-panel{% endif %}"{% if requests %} data-list-search-panel{% endif %}>
+        {% if requests %}
+        {{ list_search_toolbar('Search by student, reason, status, or request ID…', 'requests-list-search') }}
+        <div class="table-wrap">
+            <table class="table table-app table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Student</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        {% if current_user.role == 'admin' %}
+                        <th class="text-end">Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in requests %}
+                    {% set st = student_by_id.get(r.student_id) %}
+                    <tr data-search-text="#{{ r.id }} {% if st %}{{ st.name }} {{ st.class_level }} {{ display_student_id(st) }}{% else %}{{ r.student_id }}{% endif %} {{ r.reason }} {{ r.status }}">
+                        <td class="text-muted">#{{ r.id }}</td>
+                        <td>
+                            {% if st %}
+                            <strong>{{ st.name }}</strong>
+                            <div class="small text-muted">{{ st.class_level }} · {{ display_student_id(st) }}</div>
+                            {% else %}
+                            <span class="fw-semibold">#{{ r.student_id }}</span>
+                            <div class="small text-muted">Learner record not found</div>
+                            {% endif %}
+                        </td>
+                        <td>{{ r.reason }}</td>
+                        <td>
+                            {% if r.status == 'pending' %}
+                            <span class="badge badge-status bg-warning text-dark">Pending</span>
+                            {% elif r.status == 'approved' %}
+                            <span class="badge badge-status bg-success">Approved</span>
+                            {% elif r.status == 'completed' %}
+                            <span class="badge badge-status bg-secondary">Completed</span>
+                            {% else %}
+                            <span class="badge badge-status bg-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                        {% if current_user.role == 'admin' %}
+                        <td class="text-end">
+                            {% if r.status == 'pending' %}
+                            <form method="POST" action="{{ url_for('handle_request', id=r.id) }}" class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                                <button type="submit" name="decision" value="approved" class="btn btn-success btn-table">Approve</button>
+                                <button type="submit" name="decision" value="rejected" class="btn btn-outline-danger btn-table">Reject</button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted small">Resolved</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="list-search-empty d-none" data-list-search-empty>
+            <i class="fa-solid fa-magnifying-glass"></i>
+            No requests match your search.
+        </p>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-inbox"></i>
+            <p class="mb-0">No requests yet. When staff submit a request, it will appear in this table.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

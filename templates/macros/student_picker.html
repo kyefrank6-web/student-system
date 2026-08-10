@@ -1,0 +1,30 @@
+{% macro student_picker(roster_json, input_name='student_id', input_id='student_id') %}
+<div class="student-picker" data-student-picker>
+    <label class="form-label small fw-semibold mb-1" for="student-picker-query">Learner</label>
+    <div class="student-picker-search-wrap">
+        <i class="fa-solid fa-magnifying-glass student-picker-icon" aria-hidden="true"></i>
+        <input
+            type="text"
+            id="student-picker-query"
+            class="student-picker-input"
+            placeholder="Search by name, class, or RFID…"
+            data-student-picker-query
+            autocomplete="off"
+            role="combobox"
+            aria-expanded="false"
+            aria-controls="student-picker-results"
+            aria-autocomplete="list"
+        >
+    </div>
+    <input type="hidden" name="{{ input_name }}" id="{{ input_id }}" data-student-picker-value required>
+    <p class="student-picker-selected small mb-0 mt-1" data-student-picker-selected hidden></p>
+    <ul
+        id="student-picker-results"
+        class="student-picker-results list-group"
+        data-student-picker-results
+        hidden
+        role="listbox"
+    ></ul>
+    <script type="application/json" data-student-picker-data>{{ roster_json|tojson }}</script>
+</div>
+{% endmacro %}

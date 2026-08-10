@@ -1,0 +1,77 @@
+{% extends "base_auth.html" %}
+
+{% block title %}Sign in · CampusPass{% endblock %}
+
+{% block content %}
+<div class="auth-brand">
+    <a href="{{ url_for('home') }}" class="auth-brand-mark" style="text-decoration:none;"><i class="fa-solid fa-shield-halved"></i></a>
+    <h1><a href="{{ url_for('home') }}" style="color:inherit;text-decoration:none;">CampusPass</a></h1>
+    <p>Approve exits, track returns, and keep your campus accountable.</p>
+</div>
+
+<div class="auth-card">
+    <div class="auth-card-header">
+        <h2>Sign in</h2>
+        <p class="subtitle">Use the email and password provided by your school.</p>
+    </div>
+    <div class="auth-card-body">
+        {% if error %}
+        <div class="alert alert-danger mb-3" role="alert">{{ error }}</div>
+        {% endif %}
+
+        <form id="login-form" method="POST" action="{{ url_for('login') }}" autocomplete="off" novalidate>
+            <div class="login-autofill-trap" aria-hidden="true" tabindex="-1">
+                <input type="text" name="email" tabindex="-1" autocomplete="username">
+                <input type="password" name="password" tabindex="-1" autocomplete="current-password">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="login-work-email">Work email</label>
+                <input
+                    id="login-work-email"
+                    name="work_email"
+                    type="email"
+                    class="form-control login-field"
+                    value=""
+                    placeholder=""
+                    data-login-field
+                    autocomplete="off"
+                    autocapitalize="none"
+                    spellcheck="false"
+                    inputmode="email"
+                    required
+                >
+            </div>
+            <div class="mb-4">
+                <label class="form-label" for="login-auth-pass">Password</label>
+                <div class="password-input-wrap">
+                    <input
+                        id="login-auth-pass"
+                        name="auth_pass"
+                        type="password"
+                        class="form-control password-input login-field"
+                        value=""
+                        placeholder=""
+                        data-login-field
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="button" class="password-toggle-btn" aria-label="Show password" title="Show password">
+                        <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-auth-primary">Sign in</button>
+        </form>
+
+        <div class="auth-divider">New school</div>
+
+        <a href="{{ url_for('register_school') }}" class="btn btn-auth-secondary text-decoration-none text-center d-block">
+            Register your school
+        </a>
+        <p class="text-center text-muted small mt-3 mb-0">Staff accounts are created by your school administrator after approval.</p>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/login-clear.js') }}"></script>
+<script src="{{ url_for('static', filename='js/password-toggle.js') }}"></script>
+{% endblock %}
