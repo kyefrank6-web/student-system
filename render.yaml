@@ -1,6 +1,6 @@
-databases:
-  - name: campuspass-db
-    plan: free
+# Web service only — free tier allows one Postgres DB per account.
+# Link DATABASE_URL to your existing Render Postgres after deploy
+# (Dashboard → campuspass → Environment → DATABASE_URL).
 
 services:
   - type: web
@@ -15,6 +15,4 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        fromDatabase:
-          name: campuspass-db
-          property: connectionString
+        sync: false
